@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PublicitySites.com — Professional Websites Built in 24 Hours</title>
+  <meta name="description" content="Call us, tell us what you want, and we'll build your professional website in 24 hours. Starting at $750. Local businesses across the US." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-logo" href="#">
+    <img src="logo.png" alt="PublicitySites" class="nav-logo-img" />
+  </a>
+  <div class="nav-links">
+    <a href="#styles">Browse Styles</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <a class="nav-cta" href="tel:3606050692">📞 Call Now — Free Consult</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <img src="logo.png" alt="PublicitySites" class="hero-logo" />
+    <div class="hero-badge">✦ Professional Websites · Built in 24 Hours · Starting at $750</div>
+    <h1>Your Business,<br/><span>Online by Tomorrow.</span></h1>
+    <p>Call us, tell us what you want, and we build your entire professional website overnight. No tech skills. No hassle. Guaranteed.</p>
+    <div class="hero-btns">
+      <a href="tel:3606050692" class="btn-primary">📞 Call (360) 605-0692</a>
+      <a href="#styles" class="btn-secondary">See Website Styles ↓</a>
+    </div>
+    <div class="hero-sub">
+      <span><span class="dot">●</span> You just call</span>
+      <span><span class="dot">●</span> We build everything</span>
+      <span><span class="dot">●</span> Live in 24 hours</span>
+      <span><span class="dot">●</span> 100% satisfaction guarantee</span>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust-bar">
+  <p>We build for: <strong>Contractors · HVAC · Restaurants · Salons · Landscapers · Plumbers · Real Estate · Gyms · Cleaners · Tutors · Tree Service · Movers</strong></p>
+</div>
+
+<!-- STYLES CAROUSEL -->
+<section class="styles-section" id="styles">
+  <div class="container">
+    <div class="section-label">Browse Styles</div>
+    <h2 class="section-title">Pick a style. We'll make it yours.</h2>
+    <p class="section-sub">Scroll through our website styles below. See one you like? Call us and say "I want something like style #3" — that's all it takes.</p>
+  </div>
+
+  <div class="carousel-wrapper">
+    <button class="carousel-btn prev" onclick="slideCarousel(-1)" aria-label="Previous">&#8592;</button>
+    <div class="carousel-track" id="carouselTrack" onscroll="updateDots()">
+
+      <!-- STYLE 1: Bold Dark (Contractor) -->
+      <div class="style-card">
+        <div class="browser-frame">
+          <div class="browser-chrome"><span class="bdot r"></span><span class="bdot y"></span><span class="bdot g"></span><div class="burl">yourcontractingco.com</div></div>
+          <div class="site-preview" style="background: linear-gradient(135deg, #0d1b2a 0%, #1a3a5c 100%);">
+            <div class="sp-nav" style="background:rgba(0,0,0,0.4)"><div class="sp-logo" style="color:#fff">⚡ PowerBuild Co.</div><div class="sp-cta" style="background:#f97316">Get a Quote</div></div>
+            <div class="sp-hero">
+              <div class="sp-hero-img" style="background:url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80') center/cover;"></div>
+              <div class="sp-hero-overlay" style="background:linear-gradient(to right,rgba(13,27,42,0.9),rgba(13,27,42,0.4))">
+                <div class="sp-h1" style="color:#fff">Licensed Contractor<br/><span style="color:#f97316">Free Estimates</span></div>
+                <div class="sp-btn" style="background:#f97316">Call Now</div>
+              </div>
+            </div>
+            <div class="sp-features" style="background:#111">
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#f97316">🔨</div><div style="color:#fff;font-size:10px">Remodeling</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#f97316">🏠</div><div style="color:#fff;font-size:10px">New Builds</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#f97316">⭐</div><div style="color:#fff;font-size:10px">5-Star Reviews</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="style-info">
+          <div class="style-num">Style 01</div>
+          <h3>Bold & Professional</h3>
+          <p>Perfect for contractors, HVAC, plumbers, electricians, restoration companies.</p>
+          <a href="tel:3606050692" class="style-btn">I Want This Style →</a>
+        </div>
+      </div>
+
+      <!-- STYLE 2: Warm & Friendly (Restaurant/Food) -->
+      <div class="style-card">
+        <div class="browser-frame">
+          <div class="browser-chrome"><span class="bdot r"></span><span class="bdot y"></span><span class="bdot g"></span><div class="burl">mamamiakitchen.com</div></div>
+          <div class="site-preview" style="background:#1a0a00;">
+            <div class="sp-nav" style="background:rgba(139,69,19,0.95)"><div class="sp-logo" style="color:#ffd700">🍕 Mama Mia Kitchen</div><div class="sp-cta" style="background:#dc2626">Order Now</div></div>
+            <div class="sp-hero">
+              <div class="sp-hero-img" style="background:url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80') center/cover;"></div>
+              <div class="sp-hero-overlay" style="background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.75))">
+                <div class="sp-h1" style="color:#fff;text-align:center;width:100%">Authentic Italian<br/><span style="color:#ffd700;font-size:14px">Open 11am–10pm Daily</span></div>
+                <div class="sp-btn" style="background:#dc2626;margin:0 auto">Reserve a Table</div>
+              </div>
+            </div>
+            <div class="sp-features" style="background:#7c3f00">
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#ffd700">🍝</div><div style="color:#fff;font-size:10px">Dine In</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#ffd700">🛵</div><div style="color:#fff;font-size:10px">Delivery</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#ffd700">🎉</div><div style="color:#fff;font-size:10px">Private Events</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="style-info">
+          <div class="style-num">Style 02</div>
+          <h3>Warm & Inviting</h3>
+          <p>Perfect for restaurants, cafes, bakeries, catering, food trucks.</p>
+          <a href="tel:3606050692" class="style-btn">I Want This Style →</a>
+        </div>
+      </div>
+
+      <!-- STYLE 3: Elegant (Salon/Spa) -->
+      <div class="style-card">
+        <div class="browser-frame">
+          <div class="browser-chrome"><span class="bdot r"></span><span class="bdot y"></span><span class="bdot g"></span><div class="burl">luminesalon.com</div></div>
+          <div class="site-preview" style="background:#1a0f0f;">
+            <div class="sp-nav" style="background:#1a0f0f;border-bottom:1px solid #c9a96e"><div class="sp-logo" style="color:#c9a96e;letter-spacing:2px;font-size:11px">LUMINE SALON & SPA</div><div class="sp-cta" style="background:#c9a96e;color:#000">Book Now</div></div>
+            <div class="sp-hero">
+              <div class="sp-hero-img" style="background:url('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80') center/cover;"></div>
+              <div class="sp-hero-overlay" style="background:rgba(26,15,15,0.5)">
+                <div class="sp-h1" style="color:#fff;letter-spacing:1px">Luxury Hair &amp;<br/><span style="color:#c9a96e">Beauty Services</span></div>
+                <div class="sp-btn" style="background:transparent;border:1px solid #c9a96e;color:#c9a96e">Book Appointment</div>
+              </div>
+            </div>
+            <div class="sp-features" style="background:#0d0808">
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#c9a96e">✂️</div><div style="color:#c9a96e;font-size:10px">Hair</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#c9a96e">💅</div><div style="color:#c9a96e;font-size:10px">Nails</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#c9a96e">🧖</div><div style="color:#c9a96e;font-size:10px">Spa</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="style-info">
+          <div class="style-num">Style 03</div>
+          <h3>Elegant & Luxe</h3>
+          <p>Perfect for salons, spas, beauty studios, med spas, boutiques.</p>
+          <a href="tel:3606050692" class="style-btn">I Want This Style →</a>
+        </div>
+      </div>
+
+      <!-- STYLE 4: Fresh & Natural (Landscaping) -->
+      <div class="style-card">
+        <div class="browser-frame">
+          <div class="browser-chrome"><span class="bdot r"></span><span class="bdot y"></span><span class="bdot g"></span><div class="burl">greenscapelawn.com</div></div>
+          <div class="site-preview" style="background:#0a1a0a;">
+            <div class="sp-nav" style="background:#1a3a1a"><div class="sp-logo" style="color:#7bc67e">🌿 GreenScape Lawn</div><div class="sp-cta" style="background:#4caf50">Free Quote</div></div>
+            <div class="sp-hero">
+              <div class="sp-hero-img" style="background:url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80') center/cover;"></div>
+              <div class="sp-hero-overlay" style="background:linear-gradient(to right,rgba(10,26,10,0.85),rgba(10,26,10,0.3))">
+                <div class="sp-h1" style="color:#fff">Your Dream Yard<br/><span style="color:#7bc67e">Starts Here</span></div>
+                <div class="sp-btn" style="background:#4caf50">Get Free Estimate</div>
+              </div>
+            </div>
+            <div class="sp-features" style="background:#0d200d">
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#7bc67e">🌱</div><div style="color:#fff;font-size:10px">Lawn Care</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#7bc67e">🌳</div><div style="color:#fff;font-size:10px">Tree Trim</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#7bc67e">💧</div><div style="color:#fff;font-size:10px">Irrigation</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="style-info">
+          <div class="style-num">Style 04</div>
+          <h3>Fresh & Natural</h3>
+          <p>Perfect for landscaping, lawn care, tree service, irrigation, outdoor services.</p>
+          <a href="tel:3606050692" class="style-btn">I Want This Style →</a>
+        </div>
+      </div>
+
+      <!-- STYLE 5: Clean & Modern (Professional Services) -->
+      <div class="style-card">
+        <div class="browser-frame">
+          <div class="browser-chrome"><span class="bdot r"></span><span class="bdot y"></span><span class="bdot g"></span><div class="burl">apexrealestate.com</div></div>
+          <div class="site-preview" style="background:#f8f9fa;">
+            <div class="sp-nav" style="background:#fff;border-bottom:1px solid #e2e8f0"><div class="sp-logo" style="color:#1e293b;font-weight:800">APEX REALTY</div><div class="sp-cta" style="background:#2563eb">Contact Us</div></div>
+            <div class="sp-hero">
+              <div class="sp-hero-img" style="background:url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80') center/cover;"></div>
+              <div class="sp-hero-overlay" style="background:linear-gradient(to bottom,rgba(0,0,0,0.05),rgba(15,23,42,0.7))">
+                <div class="sp-h1" style="color:#fff">Find Your<br/><span style="color:#93c5fd">Dream Home</span></div>
+                <div class="sp-btn" style="background:#2563eb">Search Listings</div>
+              </div>
+            </div>
+            <div class="sp-features" style="background:#1e293b">
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#93c5fd">🏡</div><div style="color:#fff;font-size:10px">Buy</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#93c5fd">💰</div><div style="color:#fff;font-size:10px">Sell</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#93c5fd">📊</div><div style="color:#fff;font-size:10px">Invest</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="style-info">
+          <div class="style-num">Style 05</div>
+          <h3>Clean & Modern</h3>
+          <p>Perfect for real estate, insurance, financial services, law offices, consulting.</p>
+          <a href="tel:3606050692" class="style-btn">I Want This Style →</a>
+        </div>
+      </div>
+
+      <!-- STYLE 6: Bold Fitness -->
+      <div class="style-card">
+        <div class="browser-frame">
+          <div class="browser-chrome"><span class="bdot r"></span><span class="bdot y"></span><span class="bdot g"></span><div class="burl">ironedgegym.com</div></div>
+          <div class="site-preview" style="background:#050505;">
+            <div class="sp-nav" style="background:#0a0a0a"><div class="sp-logo" style="color:#ef4444;font-weight:900;letter-spacing:1px">⚡ IRON EDGE GYM</div><div class="sp-cta" style="background:#ef4444">Join Now</div></div>
+            <div class="sp-hero">
+              <div class="sp-hero-img" style="background:url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80') center/cover;"></div>
+              <div class="sp-hero-overlay" style="background:linear-gradient(to right,rgba(5,5,5,0.9),rgba(5,5,5,0.3))">
+                <div class="sp-h1" style="color:#fff;font-weight:900">No Excuses.<br/><span style="color:#ef4444">Just Results.</span></div>
+                <div class="sp-btn" style="background:#ef4444">Start Free Trial</div>
+              </div>
+            </div>
+            <div class="sp-features" style="background:#111">
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#ef4444">💪</div><div style="color:#fff;font-size:10px">Training</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#ef4444">🏋️</div><div style="color:#fff;font-size:10px">Classes</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#ef4444">🥗</div><div style="color:#fff;font-size:10px">Nutrition</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="style-info">
+          <div class="style-num">Style 06</div>
+          <h3>Bold & Energetic</h3>
+          <p>Perfect for gyms, personal trainers, martial arts, sports clubs, CrossFit.</p>
+          <a href="tel:3606050692" class="style-btn">I Want This Style →</a>
+        </div>
+      </div>
+
+      <!-- STYLE 7: Friendly & Bright (Childcare/Education) -->
+      <div class="style-card">
+        <div class="browser-frame">
+          <div class="browser-chrome"><span class="bdot r"></span><span class="bdot y"></span><span class="bdot g"></span><div class="burl">sunshinelearning.com</div></div>
+          <div class="site-preview" style="background:#fef9f3;">
+            <div class="sp-nav" style="background:#fff;border-bottom:2px solid #f97316"><div class="sp-logo" style="color:#c96a3e">☀️ Sunshine Academy</div><div class="sp-cta" style="background:#c96a3e">Enroll Now</div></div>
+            <div class="sp-hero">
+              <div class="sp-hero-img" style="background:url('https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=800&q=80') center/cover;"></div>
+              <div class="sp-hero-overlay" style="background:linear-gradient(to right,rgba(201,106,62,0.8),rgba(201,106,62,0.2))">
+                <div class="sp-h1" style="color:#fff">Where Little<br/><span style="color:#fff9c4">Learners Shine</span></div>
+                <div class="sp-btn" style="background:#fff;color:#c96a3e">Schedule a Tour</div>
+              </div>
+            </div>
+            <div class="sp-features" style="background:#c96a3e">
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#fff9c4">🎒</div><div style="color:#fff;font-size:10px">Preschool</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#fff9c4">📚</div><div style="color:#fff;font-size:10px">Tutoring</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#fff9c4">🎨</div><div style="color:#fff;font-size:10px">Arts</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="style-info">
+          <div class="style-num">Style 07</div>
+          <h3>Warm & Friendly</h3>
+          <p>Perfect for preschools, daycare, tutoring centers, after-school programs.</p>
+          <a href="tel:3606050692" class="style-btn">I Want This Style →</a>
+        </div>
+      </div>
+
+      <!-- STYLE 8: Medical/Clean -->
+      <div class="style-card">
+        <div class="browser-frame">
+          <div class="browser-chrome"><span class="bdot r"></span><span class="bdot y"></span><span class="bdot g"></span><div class="burl">claritydentalcare.com</div></div>
+          <div class="site-preview" style="background:#f0f9ff;">
+            <div class="sp-nav" style="background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1)"><div class="sp-logo" style="color:#0369a1">🦷 Clarity Dental</div><div class="sp-cta" style="background:#0284c7">Book Visit</div></div>
+            <div class="sp-hero">
+              <div class="sp-hero-img" style="background:url('https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=800&q=80') center/cover;"></div>
+              <div class="sp-hero-overlay" style="background:linear-gradient(to right,rgba(3,105,161,0.85),rgba(3,105,161,0.2))">
+                <div class="sp-h1" style="color:#fff">Healthy Smiles<br/><span style="color:#bae6fd">Start Here</span></div>
+                <div class="sp-btn" style="background:#fff;color:#0369a1">New Patient Special</div>
+              </div>
+            </div>
+            <div class="sp-features" style="background:#0369a1">
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#bae6fd">😁</div><div style="color:#fff;font-size:10px">Cleanings</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#bae6fd">✨</div><div style="color:#fff;font-size:10px">Whitening</div></div>
+              <div class="sp-feat"><div class="sp-feat-icon" style="color:#bae6fd">🏥</div><div style="color:#fff;font-size:10px">Implants</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="style-info">
+          <div class="style-num">Style 08</div>
+          <h3>Clean & Trustworthy</h3>
+          <p>Perfect for dentists, doctors, chiropractors, physical therapy, medical offices.</p>
+          <a href="tel:3606050692" class="style-btn">I Want This Style →</a>
+        </div>
+      </div>
+
+    </div><!-- end track -->
+    <button class="carousel-btn next" onclick="slideCarousel(1)">&#8594;</button>
+  </div>
+  <div class="carousel-dots" id="carouselDots"></div>
+  <p style="text-align:center;color:var(--gray-500);font-size:0.9rem;margin-top:1rem;">Don't see your style? <a href="tel:3606050692" style="color:var(--blue)">Call us</a> — we'll build anything you can imagine.</p>
+</section>
+
+<!-- HOW SIMPLE -->
+<section class="how" id="how-it-works">
+  <div class="container">
+    <div class="section-label">How It Works</div>
+    <h2 class="section-title">3 steps. Seriously that simple.</h2>
+    <p class="section-sub">No forms, no emails, no waiting. Pick up the phone and your site is in motion.</p>
+    <div class="steps">
+      <div class="step">
+        <span class="step-arrow">→</span>
+        <div class="step-num">1</div>
+        <h3>Call Us</h3>
+        <p>One phone call. Tell us your business name, what you do, and which style you liked. Takes 10 minutes max.</p>
+        <a href="tel:3606050692" class="step-call">(360) 605-0692</a>
+      </div>
+      <div class="step">
+        <span class="step-arrow">→</span>
+        <div class="step-num">2</div>
+        <h3>We Build It</h3>
+        <p>We get to work immediately. Professional design, all your content written, mobile-ready, and SEO optimized.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>You're Live</h3>
+        <p>Within 24 hours we send you a preview link. You approve it, we launch it. Your business is officially online.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BIG CTA PHONE -->
+<section class="phone-cta">
+  <div class="container" style="text-align:center;">
+    <p class="phone-label">Ready? It starts with one call.</p>
+    <a href="tel:3606050692" class="phone-number">(360) 605-0692</a>
+    <p class="phone-sub">Mon–Sat · 8am–8pm Pacific · Free consultation · No commitment</p>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-label">Pricing</div>
+    <h2 class="section-title">Simple, flat-rate pricing.</h2>
+    <p class="section-sub">No surprises. No hidden fees. One call, one price, one day.</p>
+    <div class="pricing-cards">
+      <div class="price-card">
+        <h3>Starter</h3>
+        <div class="price-amount"><span>$</span>500</div>
+        <div class="price-period">one-time · delivered in 24 hrs</div>
+        <ul class="price-list">
+          <li><span class="check">✓</span> 3-page site (Home, Services, Contact)</li>
+          <li><span class="check">✓</span> Mobile-ready design</li>
+          <li><span class="check">✓</span> Contact form + click-to-call</li>
+          <li><span class="check">✓</span> SEO basics</li>
+          <li><span class="check">✓</span> SSL security</li>
+        </ul>
+        <a href="tel:3606050692" class="price-btn price-btn-outline">📞 Call to Order</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-badge">Most Popular</div>
+        <h3>Professional</h3>
+        <div class="price-amount"><span>$</span>750</div>
+        <div class="price-period">one-time · delivered in 24 hrs</div>
+        <ul class="price-list">
+          <li><span class="check">✓</span> Up to 6 pages (full site)</li>
+          <li><span class="check">✓</span> Custom design in your style</li>
+          <li><span class="check">✓</span> We write all your content</li>
+          <li><span class="check">✓</span> Google Maps + service area</li>
+          <li><span class="check">✓</span> Photo gallery</li>
+          <li><span class="check">✓</span> 1 month free edits</li>
+          <li><span class="check">✓</span> 100% satisfaction guarantee</li>
+        </ul>
+        <a href="tel:3606050692" class="price-btn price-btn-fill">📞 Call to Order →</a>
+      </div>
+      <div class="price-card">
+        <h3>Pro + Monthly Care</h3>
+        <div class="price-amount"><span>$</span>750</div>
+        <div class="price-period">+ $150/month ongoing</div>
+        <ul class="price-list">
+          <li><span class="check">✓</span> Everything in Professional</li>
+          <li><span class="check">✓</span> Unlimited edits anytime</li>
+          <li><span class="check">✓</span> Hosting managed for you</li>
+          <li><span class="check">✓</span> Monthly SEO updates</li>
+          <li><span class="check">✓</span> Priority support</li>
+          <li><span class="check">✓</span> New pages added free</li>
+        </ul>
+        <a href="tel:3606050692" class="price-btn price-btn-outline">📞 Call to Order</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section class="portfolio">
+  <div class="container">
+    <div class="section-label">Real Examples</div>
+    <h2 class="section-title">Sites we've built.</h2>
+    <p class="section-sub">Every site is built from scratch — custom for your business, not a generic template.</p>
+    <div class="portfolio-grid">
+      <div class="portfolio-card">
+        <div class="portfolio-img fire">🔥💧</div>
+        <div class="portfolio-info">
+          <h4>FIRWTR LLC — Fire &amp; Water Restoration</h4>
+          <p>10-page site, emergency service pages, SEO for Vancouver WA, 24/7 lead capture. Now ranking on Google.</p>
+          <span class="portfolio-tag">Home Services</span>&nbsp;
+          <a href="https://firwtr.com" target="_blank" class="portfolio-tag" style="text-decoration:none;color:var(--blue)">firwtr.com ↗</a>
+        </div>
+      </div>
+      <div class="portfolio-card">
+        <div class="portfolio-img school">🎒📚</div>
+        <div class="portfolio-info">
+          <h4>Teresa's Little School — Private Preschool</h4>
+          <p>Warm family-friendly design, full school calendar, enrollment forms, SEO for La Center WA families.</p>
+          <span class="portfolio-tag">Education</span>&nbsp;
+          <span class="portfolio-tag">teresaslittleschool.com</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq">
+  <div class="container">
+    <div class="section-label">FAQ</div>
+    <h2 class="section-title">Common questions.</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <h4>Do I really just call? That's it?</h4>
+        <p>Yes. Call us, tell us your business name, what you do, and which style you liked from the carousel. We handle everything else — design, writing, launch. You don't touch a computer.</p>
+      </div>
+      <div class="faq-item">
+        <h4>What if I don't like the style options shown?</h4>
+        <p>Not a problem. Just call and describe what you're going for — a color, a vibe, a competitor's site you like — and we'll design something custom for you.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Do I need a domain name already?</h4>
+        <p>No. If you don't have one, we'll help you pick and register one on the call (about $12/year). If you already have one, we'll use it.</p>
+      </div>
+      <div class="faq-item">
+        <h4>What's the guarantee?</h4>
+        <p>We send you a preview link before you pay anything. If you don't love what we built, we revise for free. You only pay when you're happy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BOTTOM CTA -->
+<section class="cta-bottom" id="get-started">
+  <div class="container" style="position:relative;z-index:1;text-align:center;">
+    <h2>Your website. Built today.<br/>Live by tomorrow.</h2>
+    <p>One phone call is all it takes. We'll handle the rest.</p>
+    <a href="tel:3606050692" class="btn-primary" style="font-size:1.2rem;padding:1.1rem 2.5rem;display:inline-block;">📞 Call (360) 605-0692</a>
+    <p style="margin-top:1.5rem;color:#475569;font-size:0.9rem;">Or email: <a href="mailto:firwtroffice@gmail.com" style="color:#60A5FA;">firwtroffice@gmail.com</a></p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p><img src="logo.png" alt="PublicitySites" style="height:36px;vertical-align:middle;margin-right:8px;" /> Professional websites for local businesses · 24-hour delivery</p>
+  <p style="margin-top:0.5rem;">© 2026 PublicitySites.com · <a href="tel:3606050692">(360) 605-0692</a> · <a href="mailto:firwtroffice@gmail.com">firwtroffice@gmail.com</a></p>
+</footer>
+
+<script>
+  const track = document.getElementById('carouselTrack');
+  const cards = track.querySelectorAll('.style-card');
+  const dotsContainer = document.getElementById('carouselDots');
+
+  cards.forEach((_, i) => {
+    const d = document.createElement('button');
+    d.className = 'cdot' + (i === 0 ? ' active' : '');
+    d.setAttribute('aria-label', 'Go to style ' + (i+1));
+    d.onclick = () => goTo(i);
+    dotsContainer.appendChild(d);
+  });
+
+  function goTo(i) {
+    const card = cards[i];
+    track.scrollTo({ left: card.offsetLeft - 32, behavior: 'smooth' });
+  }
+
+  function slideCarousel(dir) {
+    track.scrollBy({ left: dir * (364 + 24), behavior: 'smooth' });
+  }
+
+  function updateDots() {
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let closest = 0, minDist = Infinity;
+    cards.forEach((c, i) => {
+      const dist = Math.abs(c.offsetLeft + c.offsetWidth / 2 - center);
+      if (dist < minDist) { minDist = dist; closest = i; }
+    });
+    dotsContainer.querySelectorAll('.cdot').forEach((d, i) => d.classList.toggle('active', i === closest));
+  }
+</script>
+
+</body>
+</html>

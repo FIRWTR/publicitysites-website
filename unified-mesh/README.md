@@ -35,11 +35,11 @@ Android app
 
 ## Status, honestly
 
-**133 unit tests pass**, covering the bridge decision logic, duplicate
+**139 unit tests pass**, covering the bridge decision logic, duplicate
 suppression, TTL expiry, hop limiting, the multi-bridge round trip, channel
 mapping, both protocol codecs at the byte level, both adapters driven against
-simulated radios that speak the real wire formats, and the radio-isolation
-guarantees.
+simulated radios that speak the real wire formats, reconnect backoff, and the
+radio-isolation guarantees.
 
 **The Android modules have not been compiled**, and nothing has been run against
 real hardware. The environment this was written in cannot reach
@@ -56,6 +56,8 @@ the protocol and bridge layers as tested code.
 Before trusting this in the field, bench it in this order — it matches the way
 the code is layered, so a failure at any step is localised:
 
+0. Demo mode, no hardware: everything below except the radio protocols
+   themselves. Do this first — it is free, and it flushes out most problems.
 1. Meshtastic alone: connect, receive text, send text, node list.
 2. MeshCore alone: connect, receive text, send text, contacts.
 3. Both at once, sending and receiving on both.

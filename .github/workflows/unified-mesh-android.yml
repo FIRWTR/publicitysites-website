@@ -62,6 +62,9 @@ jobs:
     name: Debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    # Needed only to publish the APK release; the test job stays read-only.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -85,6 +88,28 @@ jobs:
 
       # A build that fails is the useful case here, so keep whatever the
       # Android Gradle Plugin wrote about why.
+      # A GitHub artifact downloads as a .zip, which Android will not install.
+      # Publishing the APK as a prerelease asset gives a direct link that
+      # installs straight from a phone browser, with no unzipping.
+      - name: Publish the APK as a rolling prerelease
+        if: success() && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: unified-mesh
+        run: |
+          set -euo pipefail
+          TAG="latest-debug"
+          APK=$(ls app/build/outputs/apk/debug/*.apk | head -1)
+          cp "$APK" "unified-mesh-debug.apk"
+          # Recreate the release each time so the tag always points at this build.
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create "$TAG" "unified-mesh-debug.apk" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Unified Mesh debug build" \
+            --prerelease \
+            --notes "Debug APK from ${GITHUB_SHA:0:7}. Unsigned debug build for testing; enable install from unknown sources to install it."
+
       - name: Upload build reports on failure
         if: failure()
         uses: actions/upload-artifact@v4

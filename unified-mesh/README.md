@@ -31,6 +31,7 @@ Android app
 | Diagnostics log with sanitised export | Built |
 | Meshtastic protocol (BLE, protobuf, config handshake, acks) | Built, verified against a simulated radio |
 | MeshCore companion protocol (BLE, frames, contacts, offline queue) | Built, verified against a simulated radio |
+| Builds to an installable APK | Verified on CI |
 | Bench-tested against real hardware | **Not done — see Status** |
 
 ## Status, honestly
@@ -41,17 +42,18 @@ mapping, both protocol codecs at the byte level, both adapters driven against
 simulated radios that speak the real wire formats, reconnect backoff, and the
 radio-isolation guarantees.
 
-**The Android modules have not been compiled**, and nothing has been run against
-real hardware. The environment this was written in cannot reach
-`dl.google.com`, so the Android Gradle Plugin and the Android SDK were both
-unavailable — which is also why the protocol implementations were deliberately
-built as plain Kotlin/JVM libraries, so the parts that carry the real risk could
-be verified anyway.
+**The whole project compiles**, and CI produces an installable debug APK on
+every push. The tests also run there against the real ten-module build, which
+matters: the local JVM harness compiles every pure-Kotlin module into a single
+source set, so it cannot see errors that only exist across module boundaries.
+Getting to that first green build took four rounds and found four such
+problems — a missing Gradle wrapper, a duplicate protobuf builtin, a misplaced
+`kotlin{}` block, and three smart casts that do not hold across modules.
 
-Expect the first `./gradlew assembleDebug` on a normal machine to need some
-version-catalogue adjustment (`gradle/libs.versions.toml` pins AGP 8.9.2, Kotlin
-2.1.20, compileSdk 36). Treat the Android layers as reviewed-but-unbuilt code and
-the protocol and bridge layers as tested code.
+**Nothing has been run against real hardware, or on a device at all.** A green
+APK proves the code compiles and links; it does not prove the Compose screens
+render, that Hilt's graph constructs at runtime, or that Room's schema is
+valid. Those need a phone.
 
 Before trusting this in the field, bench it in this order — it matches the way
 the code is layered, so a failure at any step is localised:

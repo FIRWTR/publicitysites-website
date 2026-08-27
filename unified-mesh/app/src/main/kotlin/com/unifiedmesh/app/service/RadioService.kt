@@ -57,16 +57,32 @@ class RadioService : LifecycleService() {
 
         // Start in the foreground immediately: Android gives a service a few
         // seconds to call startForeground before it kills the process.
-        ServiceCompat.startForeground(
-            this,
-            MeshNotifier.STATUS_NOTIFICATION_ID,
-            notifier.statusNotification(coordinator.connectionStates.value),
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-            } else {
-                0
-            },
-        )
+        //
+        // The platform refuses a connectedDevice service when the app does not
+        // hold BLUETOOTH_CONNECT, and refuses any foreground start from the
+        // background on Android 12+. Both throw, and an uncaught throw here
+        // takes the whole app down — so the service stands down instead. The
+        // caller re-starts it once permission has been granted.
+        try {
+            ServiceCompat.startForeground(
+                this,
+                MeshNotifier.STATUS_NOTIFICATION_ID,
+                notifier.statusNotification(coordinator.connectionStates.value),
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                } else {
+                    0
+                },
+            )
+        } catch (e: Exception) {
+            diagnostics.error(
+                DiagnosticCategory.PERMISSION,
+                "could not start the foreground service: ${e.javaClass.simpleName}",
+                detail = e.message,
+            )
+            stopSelf()
+            return
+        }
 
         observeConnectionStates()
         observeNodeUpdates()
@@ -148,10 +164,22 @@ class RadioService : LifecycleService() {
         const val ACTION_CONNECT_ASSIGNED = "com.unifiedmesh.app.CONNECT_ASSIGNED"
         const val ACTION_DISCONNECT_ALL = "com.unifiedmesh.app.DISCONNECT_ALL"
 
-        /** Starts the service and asks it to attach to whatever radios are assigned. */
-        fun start(context: Context) {
+        /**
+         * Starts the service and asks it to attach to whatever radios are assigned.
+         *
+         * Returns false when the platform refused the start. Android 12+ rejects a
+         * foreground service started while the app is in the background, and
+         * Android 13+ rejects a `connectedDevice` service started from
+         * `BOOT_COMPLETED`. Both throw, and an uncaught throw from a receiver or a
+         * lifecycle coroutine takes the process down — so refusal is reported as a
+         * value and the caller records it instead of the app dying.
+         */
+        fun start(context: Context): Boolean = try {
             val intent = Intent(context, RadioService::class.java).setAction(ACTION_CONNECT_ASSIGNED)
             context.startForegroundService(intent)
+            true
+        } catch (e: Exception) {
+            false
         }
 
         fun stop(context: Context) {
@@ -178,6 +206,10 @@ class BootReceiver : BroadcastReceiver() {
      */
     @Inject lateinit var settings: SettingsRepository
 
+    @Inject lateinit var permissions: com.unifiedmesh.core.bluetooth.BluetoothPermissions
+
+    @Inject lateinit var diagnostics: DiagnosticsRepository
+
     @Inject
     @com.unifiedmesh.app.di.ApplicationScope
     lateinit var scope: kotlinx.coroutines.CoroutineScope
@@ -188,8 +220,21 @@ class BootReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         scope.launch {
             try {
-                if (settings.general.first().backgroundOperationEnabled) {
-                    RadioService.start(appContext)
+                // Same gate as the activity: a connectedDevice service started
+                // without BLUETOOTH_CONNECT is refused by the platform, and a
+                // permission can be revoked between one boot and the next.
+                if (settings.general.first().backgroundOperationEnabled &&
+                    permissions.allGranted(appContext) &&
+                    !RadioService.start(appContext)
+                ) {
+                    // Android 13+ does not allow a connectedDevice service to be
+                    // started from BOOT_COMPLETED. The radios attach when the
+                    // operator next opens the app; say so rather than fail silently.
+                    diagnostics.warn(
+                        DiagnosticCategory.CONNECTION,
+                        "the system would not let the radio service start at boot; " +
+                            "open the app to reconnect",
+                    )
                 }
             } finally {
                 // Always release the wake lock the system took for this

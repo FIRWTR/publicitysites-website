@@ -19,6 +19,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -82,6 +83,15 @@ fun UnifiedMeshTheme(
 fun UnifiedMeshApp(
     onExportDiagnostics: (String) -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * Conversation to open, from a tapped message notification.
+     *
+     * Handled here rather than by the caller because navigation is only legal
+     * once [NavHost] has set the graph. An effect declared alongside this
+     * composable can run before that and throw.
+     */
+    deepLinkConversationId: String? = null,
+    onDeepLinkHandled: () -> Unit = {},
     navController: NavHostController = rememberNavController(),
     shellViewModel: AppShellViewModel = hiltViewModel(),
 ) {
@@ -165,6 +175,15 @@ fun UnifiedMeshApp(
             }
             composable(Routes.BRIDGE) { BridgeScreen() }
             composable(Routes.DIAGNOSTICS) { DiagnosticsScreen(onExport = onExportDiagnostics) }
+        }
+
+        // Declared after NavHost so the graph is set by the time effects run.
+        // Navigating before that throws, which would turn tapping a notification
+        // into a crash.
+        LaunchedEffect(deepLinkConversationId) {
+            val conversationId = deepLinkConversationId ?: return@LaunchedEffect
+            navController.navigate(Routes.conversation(conversationId))
+            onDeepLinkHandled()
         }
     }
 }

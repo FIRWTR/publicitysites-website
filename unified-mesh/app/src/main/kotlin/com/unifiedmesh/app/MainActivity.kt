@@ -5,12 +5,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.LaunchedEffect
-import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.unifiedmesh.app.service.RadioService
+import com.unifiedmesh.core.bluetooth.BluetoothPermissions
 import com.unifiedmesh.core.database.SettingsRepository
-import com.unifiedmesh.feature.common.Routes
 import com.unifiedmesh.feature.common.UnifiedMeshApp
 import com.unifiedmesh.feature.common.UnifiedMeshTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -25,6 +25,8 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject lateinit var settings: SettingsRepository
+
+    @Inject lateinit var permissions: BluetoothPermissions
 
     /**
      * Conversation to open, set by tapping a message notification.
@@ -42,31 +44,49 @@ class MainActivity : ComponentActivity() {
         // Opening the app is the operator asking for their radios, so this is
         // where the service starts — not in Application.onCreate, which runs for
         // any process spawn including a broadcast the operator never saw.
-        lifecycleScope.launch {
-            if (settings.general.first().backgroundOperationEnabled) {
-                RadioService.start(this@MainActivity)
-            }
-        }
+        //
+        // Gated on Bluetooth permission: a connectedDevice foreground service
+        // started without BLUETOOTH_CONNECT is refused by the platform on
+        // Android 14 and later, which would crash the app on first launch
+        // before the operator has been asked for anything.
+        startRadioServiceIfAllowed()
 
         pendingConversationId = intent?.getStringExtra(EXTRA_CONVERSATION_ID)
 
         setContent {
             UnifiedMeshTheme {
-                val navController = rememberNavController()
-
-                // Navigate once per delivered id, then clear it, so returning to
-                // the app later does not re-open a thread the operator has left.
-                LaunchedEffect(pendingConversationId) {
-                    pendingConversationId?.let { conversationId ->
-                        navController.navigate(Routes.conversation(conversationId))
-                        pendingConversationId = null
-                    }
-                }
-
+                // The navigation itself happens inside UnifiedMeshApp, where the
+                // graph is known to be set. Clearing the id once consumed stops a
+                // later return to the app re-opening a thread already left.
                 UnifiedMeshApp(
                     onExportDiagnostics = ::shareDiagnostics,
-                    navController = navController,
+                    deepLinkConversationId = pendingConversationId,
+                    onDeepLinkHandled = { pendingConversationId = null },
                 )
+            }
+        }
+    }
+
+    /**
+     * Starts the radio service whenever the activity is in the foreground and the
+     * operator has granted Bluetooth access.
+     *
+     * `repeatOnLifecycle(STARTED)` does two jobs here. It re-runs the check every
+     * time the activity comes back to the foreground, which is how the service
+     * starts after the permission dialog is answered rather than staying down for
+     * the rest of the session. And it keeps the start out of the background, where
+     * Android 12+ refuses a foreground service outright — the setting read
+     * suspends, so a bare launch could land after the activity had already gone.
+     */
+    private fun startRadioServiceIfAllowed() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val wanted = settings.general.first().backgroundOperationEnabled
+                if (wanted && permissions.allGranted(this@MainActivity)) {
+                    // Starting an already-running service is a no-op beyond
+                    // re-delivering the connect action, which is idempotent.
+                    RadioService.start(this@MainActivity)
+                }
             }
         }
     }

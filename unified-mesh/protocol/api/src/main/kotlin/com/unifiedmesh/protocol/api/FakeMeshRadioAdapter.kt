@@ -154,6 +154,21 @@ open class FakeMeshRadioAdapter(
         _incoming.emit(incoming.toUnifiedMessage(protocol, clock.nowMillis()))
     }
 
+    /**
+     * Simulates the radio going away by itself — out of range, powered off, or a
+     * dropped GATT link.
+     *
+     * Distinct from [disconnect], which represents the operator asking for the
+     * link to close. The session treats the two very differently: one is retried,
+     * the other is not.
+     */
+    fun simulateLinkLoss(reason: String = "Link lost") {
+        sessionJob?.cancel()
+        sessionJob = null
+        _deviceInfo.value = null
+        _connectionState.value = RadioConnectionState.Error(reason, recoverable = true)
+    }
+
     /** Releases the adapter's scope. Only used when the whole radio slot is torn down. */
     fun shutdown() {
         scope.cancel()

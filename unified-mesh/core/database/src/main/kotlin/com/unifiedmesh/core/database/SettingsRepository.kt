@@ -36,6 +36,14 @@ data class GeneralSettings(
     val keepRadiosConnected: Boolean = true,
     val meshtasticDefaultChannelId: String? = null,
     val meshCoreDefaultChannelId: String? = null,
+    /**
+     * Run against simulated radios instead of Bluetooth.
+     *
+     * Lets the whole app — inbox, composer, nodes, map, bridge, notifications,
+     * the foreground service — be exercised on a phone with no hardware
+     * attached. Off by default, and it never touches Bluetooth while on.
+     */
+    val demoMode: Boolean = false,
 )
 
 /**
@@ -64,6 +72,7 @@ class SettingsRepository @Inject constructor(
             keepRadiosConnected = prefs[KEEP_CONNECTED] ?: true,
             meshtasticDefaultChannelId = prefs[MT_DEFAULT_CHANNEL],
             meshCoreDefaultChannelId = prefs[MC_DEFAULT_CHANNEL],
+            demoMode = prefs[DEMO_MODE] ?: false,
         )
     }
 
@@ -96,6 +105,8 @@ class SettingsRepository @Inject constructor(
     suspend fun setBackgroundOperationEnabled(enabled: Boolean) = putBoolean(BACKGROUND, enabled)
 
     suspend fun setKeepRadiosConnected(enabled: Boolean) = putBoolean(KEEP_CONNECTED, enabled)
+
+    suspend fun setDemoMode(enabled: Boolean) = putBoolean(DEMO_MODE, enabled)
 
     suspend fun setDefaultChannel(protocol: MeshProtocol, channelId: String?) {
         val key = when (protocol) {
@@ -174,6 +185,7 @@ class SettingsRepository @Inject constructor(
         val KEEP_CONNECTED = booleanPreferencesKey("keep_radios_connected")
         val MT_DEFAULT_CHANNEL = stringPreferencesKey("meshtastic_default_channel")
         val MC_DEFAULT_CHANNEL = stringPreferencesKey("meshcore_default_channel")
+        val DEMO_MODE = booleanPreferencesKey("demo_mode")
 
         val BRIDGE_MASTER = booleanPreferencesKey("bridge_master")
         val BRIDGE_MT_TO_MC = booleanPreferencesKey("bridge_mt_to_mc")

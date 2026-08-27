@@ -5,12 +5,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.compose.rememberNavController
 import androidx.lifecycle.lifecycleScope
 import com.unifiedmesh.app.service.RadioService
 import com.unifiedmesh.core.database.SettingsRepository
+import com.unifiedmesh.feature.common.Routes
 import com.unifiedmesh.feature.common.UnifiedMeshApp
 import com.unifiedmesh.feature.common.UnifiedMeshTheme
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,6 +25,15 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject lateinit var settings: SettingsRepository
+
+    /**
+     * Conversation to open, set by tapping a message notification.
+     *
+     * Held as Compose state rather than read once in onCreate, because the
+     * activity is singleTask: a second notification tap arrives at [onNewIntent]
+     * on the existing instance, not as a fresh onCreate.
+     */
+    private var pendingConversationId by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -33,11 +48,33 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        pendingConversationId = intent?.getStringExtra(EXTRA_CONVERSATION_ID)
+
         setContent {
             UnifiedMeshTheme {
-                UnifiedMeshApp(onExportDiagnostics = ::shareDiagnostics)
+                val navController = rememberNavController()
+
+                // Navigate once per delivered id, then clear it, so returning to
+                // the app later does not re-open a thread the operator has left.
+                LaunchedEffect(pendingConversationId) {
+                    pendingConversationId?.let { conversationId ->
+                        navController.navigate(Routes.conversation(conversationId))
+                        pendingConversationId = null
+                    }
+                }
+
+                UnifiedMeshApp(
+                    onExportDiagnostics = ::shareDiagnostics,
+                    navController = navController,
+                )
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingConversationId = intent.getStringExtra(EXTRA_CONVERSATION_ID)
     }
 
     /**

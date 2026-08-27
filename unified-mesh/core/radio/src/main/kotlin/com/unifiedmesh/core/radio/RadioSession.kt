@@ -79,6 +79,15 @@ class RadioSession(
     private val reconnectPolicy: ReconnectPolicy = ReconnectPolicy.exponential(),
     dispatcher: CoroutineContext = kotlinx.coroutines.Dispatchers.Default,
     private val diagnostics: (String) -> Unit = {},
+    /**
+     * Whether a dropped link should be retried automatically.
+     *
+     * Read at the moment of each drop rather than captured at construction, so
+     * turning "keep radios connected" off in Settings takes effect on the next
+     * drop instead of on the next app start. Turning it off never disconnects a
+     * healthy link — it only stops this session chasing one that has gone.
+     */
+    private val autoReconnectEnabled: () -> Boolean = { true },
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
@@ -220,6 +229,13 @@ class RadioSession(
 
     private fun scheduleReconnect(device: RadioDevice, attempt: Int, reason: String) {
         if (stoppedByUser) return
+        if (!autoReconnectEnabled()) {
+            // The operator has asked us not to chase dropped links. Report the
+            // drop and stop, rather than silently retrying in the background.
+            diagnostics("${protocol.displayName}: $reason; automatic reconnect is off")
+            _state.value = RadioConnectionState.Disconnected
+            return
+        }
         superviseJob?.cancel()
         superviseJob = scope.launch {
             var currentAttempt = attempt

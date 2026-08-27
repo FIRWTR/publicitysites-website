@@ -41,6 +41,7 @@ data class RadiosUiState(
     val scanning: Boolean = false,
     val scanResults: List<ScannedDevice> = emptyList(),
     val scanError: String? = null,
+    val demoMode: Boolean = false,
 )
 
 @HiltViewModel
@@ -64,8 +65,22 @@ class RadiosViewModel @Inject constructor(
         coordinator.meshCore.state,
         combine(coordinator.meshtastic.deviceInfo, coordinator.meshCore.deviceInfo) { a, b -> a to b },
         settings.assignedRadios(),
-        combine(scanning, scanResults, scanError, permissionState) { isScanning, results, error, missing ->
-            ScanState(isScanning, results, error, missing)
+        combine(
+            scanning,
+            scanResults,
+            scanError,
+            permissionState,
+            settings.general,
+        ) { isScanning, results, error, missing, general ->
+            ScanState(
+                scanning = isScanning,
+                results = results,
+                error = error,
+                // Demo mode never touches Bluetooth, so asking for scan and
+                // connect permissions would be dishonest.
+                missingPermissions = if (general.demoMode) emptyList() else missing,
+                demoMode = general.demoMode,
+            )
         },
     ) { mtState, mcState, (mtInfo, mcInfo), assigned, scan ->
         RadiosUiState(
@@ -77,6 +92,7 @@ class RadiosViewModel @Inject constructor(
             scanning = scan.scanning,
             scanResults = scan.results,
             scanError = scan.error,
+            demoMode = scan.demoMode,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -89,6 +105,7 @@ class RadiosViewModel @Inject constructor(
         val results: List<ScannedDevice>,
         val error: String?,
         val missingPermissions: List<BluetoothPermission>,
+        val demoMode: Boolean,
     )
 
     /** Re-reads permission state; call after returning from a permission prompt. */
@@ -97,6 +114,14 @@ class RadiosViewModel @Inject constructor(
     }
 
     fun startScan() {
+        if (uiState.value.demoMode) {
+            // Simulated radios still go through assign-then-connect, so demo mode
+            // exercises the real screen rather than a special-cased shortcut.
+            scanResults.value = DEMO_DEVICES
+            scanError.value = null
+            scanning.value = false
+            return
+        }
         if (permissions.missing(context).isNotEmpty()) {
             refreshPermissions()
             return
@@ -165,5 +190,26 @@ class RadiosViewModel @Inject constructor(
     override fun onCleared() {
         scanJob?.cancel()
         super.onCleared()
+    }
+
+    private companion object {
+        /**
+         * The two devices offered in demo mode.
+         *
+         * Addresses are in the documentation-reserved range so they cannot
+         * collide with a real adapter's MAC.
+         */
+        val DEMO_DEVICES = listOf(
+            ScannedDevice(
+                device = RadioDevice(address = "00:00:5E:00:53:01", name = "Demo T-Deck"),
+                likelyProtocol = MeshProtocol.MESHTASTIC,
+                hint = "Simulated Meshtastic radio",
+            ),
+            ScannedDevice(
+                device = RadioDevice(address = "00:00:5E:00:53:02", name = "Demo T1000-E"),
+                likelyProtocol = MeshProtocol.MESHCORE,
+                hint = "Simulated MeshCore radio",
+            ),
+        )
     }
 }

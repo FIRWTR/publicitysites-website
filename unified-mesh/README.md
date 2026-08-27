@@ -89,12 +89,19 @@ Everything that matters is a plain JVM test:
 
 No emulator, no device, no Android SDK required for those five.
 
-## Trying it without radios
+## Trying it without radios: demo mode
 
-`FakeMeshtasticAdapter` and `FakeMeshCoreAdapter` in `protocol:api` are complete
-in-memory radios — asynchronous handshake, scripted traffic, delayed delivery
-confirmation, injectable failures. They are in `main`, not `test`, so they can
-back a demo mode as well as the test suite.
+**Settings → Demo mode → Use simulated radios.** Then Radios → assign both
+slots as usual. The app runs against two in-memory radios instead of Bluetooth:
+asynchronous handshake, traffic arriving every twenty seconds, delivery
+confirmation, node lists, positions on the map. No hardware, no Bluetooth
+permissions, and the whole app is exercised — inbox, composer, Send Via Both,
+bridge, notifications, foreground service.
+
+Assignment still goes through scan-then-assign-then-connect, so demo mode
+exercises the real screens rather than a special-cased shortcut.
+
+Turn it off and reconnect both radios to go back to real hardware.
 
 ## Permissions
 

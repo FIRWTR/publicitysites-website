@@ -17,6 +17,8 @@ import com.unifiedmesh.core.model.RadioTransport
 import com.unifiedmesh.core.radio.RadioCoordinator
 import com.unifiedmesh.core.radio.RadioSession
 import com.unifiedmesh.app.notification.IncomingMessageNotifier
+import com.unifiedmesh.protocol.api.FakeMeshCoreAdapter
+import com.unifiedmesh.protocol.api.FakeMeshtasticAdapter
 import com.unifiedmesh.protocol.api.MeshRadioAdapter
 import com.unifiedmesh.protocol.meshcore.MeshCoreAdapter
 import com.unifiedmesh.protocol.meshtastic.MeshtasticAdapter
@@ -30,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -67,6 +70,38 @@ object RadioModule {
     )
 
     /**
+     * Whether the app is running against simulated radios.
+     *
+     * Held as a StateFlow so the adapter factories can read it at the moment a
+     * connection is made, rather than capturing it when the graph is built.
+     */
+    @Provides
+    @Singleton
+    @DemoMode
+    fun demoModeState(
+        settings: SettingsRepository,
+        @ApplicationScope scope: CoroutineScope,
+    ): StateFlow<Boolean> = settings.general
+        .map { it.demoMode }
+        .stateIn(scope, SharingStarted.Eagerly, false)
+
+    /**
+     * Whether dropped links should be retried.
+     *
+     * Read per drop for the same reason: turning the setting off should take
+     * effect on the next drop, not the next app start.
+     */
+    @Provides
+    @Singleton
+    @AutoReconnect
+    fun autoReconnectState(
+        settings: SettingsRepository,
+        @ApplicationScope scope: CoroutineScope,
+    ): StateFlow<Boolean> = settings.general
+        .map { it.keepRadiosConnected }
+        .stateIn(scope, SharingStarted.Eagerly, true)
+
+    /**
      * Builds the Meshtastic slot.
      *
      * The adapter factory is what keeps `:core:radio` free of Android: the
@@ -81,12 +116,21 @@ object RadioModule {
         @ApplicationContext context: Context,
         clock: Clock,
         diagnostics: DiagnosticsRepository,
+        @DemoMode demoMode: StateFlow<Boolean>,
+        @AutoReconnect autoReconnect: StateFlow<Boolean>,
     ): RadioSession = RadioSession(
         protocol = MeshProtocol.MESHTASTIC,
-        adapterFactory = { device -> meshtasticAdapter(context, device, clock, diagnostics) },
+        adapterFactory = { device ->
+            if (demoMode.value) {
+                FakeMeshtasticAdapter(clock = clock, chatterIntervalMillis = DEMO_CHATTER_INTERVAL_MILLIS)
+            } else {
+                meshtasticAdapter(context, device, clock, diagnostics)
+            }
+        },
         clock = clock,
         dispatcher = Dispatchers.IO,
         diagnostics = { diagnostics.info(DiagnosticCategory.CONNECTION, it, MeshProtocol.MESHTASTIC) },
+        autoReconnectEnabled = { autoReconnect.value },
     )
 
     @Provides
@@ -96,12 +140,24 @@ object RadioModule {
         @ApplicationContext context: Context,
         clock: Clock,
         diagnostics: DiagnosticsRepository,
+        @DemoMode demoMode: StateFlow<Boolean>,
+        @AutoReconnect autoReconnect: StateFlow<Boolean>,
     ): RadioSession = RadioSession(
         protocol = MeshProtocol.MESHCORE,
-        adapterFactory = { device -> meshCoreAdapter(context, device, clock, diagnostics) },
+        adapterFactory = { device ->
+            if (demoMode.value) {
+                // Offset from the Meshtastic interval so the two demo radios do
+                // not speak in lockstep, which would make a bridge loop look
+                // like ordinary traffic.
+                FakeMeshCoreAdapter(clock = clock, chatterIntervalMillis = DEMO_CHATTER_INTERVAL_MILLIS + 7_000)
+            } else {
+                meshCoreAdapter(context, device, clock, diagnostics)
+            }
+        },
         clock = clock,
         dispatcher = Dispatchers.IO,
         diagnostics = { diagnostics.info(DiagnosticCategory.CONNECTION, it, MeshProtocol.MESHCORE) },
+        autoReconnectEnabled = { autoReconnect.value },
     )
 
     @Provides
@@ -167,7 +223,18 @@ object RadioModule {
         RadioTransport.USB, RadioTransport.TCP ->
             throw UnsupportedOperationException("${device.transport} is not supported yet")
     }
+
+    /** How often a demo radio produces a message. Slow enough to read, fast enough to test. */
+    private const val DEMO_CHATTER_INTERVAL_MILLIS = 20_000L
 }
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DemoMode
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class AutoReconnect
 
 @Qualifier
 @Retention(AnnotationRetention.BINARY)

@@ -69,6 +69,20 @@ fun RadiosScreen(
     ) {
         Text("RADIOS", style = MaterialTheme.typography.labelLarge)
 
+        if (state.demoMode) {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Demo mode is on", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        text = "These are simulated radios, not Bluetooth devices. " +
+                            "Turn demo mode off in Settings to use real hardware.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+
         if (state.missingPermissions.isNotEmpty()) {
             PermissionCard(
                 permissions = state.missingPermissions,

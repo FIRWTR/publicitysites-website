@@ -25,6 +25,9 @@ jobs:
   test:
     name: Unit tests
     runs-on: ubuntu-latest
+    # These tests take seconds. Anything approaching this limit is a hang, and a
+    # bounded failure with logs is far more useful than the six-hour default.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -40,7 +43,7 @@ jobs:
       - name: Run JVM unit tests
         working-directory: unified-mesh
         run: >
-          ./gradlew --no-daemon --stacktrace
+          ./gradlew --no-daemon --stacktrace --no-configuration-cache
           :core:bridge:test
           :core:radio:test
           :protocol:api:test
@@ -58,6 +61,7 @@ jobs:
   apk:
     name: Debug APK
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -70,7 +74,7 @@ jobs:
 
       - name: Build debug APK
         working-directory: unified-mesh
-        run: ./gradlew --no-daemon --stacktrace :app:assembleDebug
+        run: ./gradlew --no-daemon --stacktrace --no-configuration-cache :app:assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

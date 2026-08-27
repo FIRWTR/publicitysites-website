@@ -33,8 +33,18 @@ object Routes {
     const val BRIDGE = "bridge"
     const val SCAN = "scan/{protocol}"
 
+    /**
+     * Conversation ids carry a protocol prefix and, for channels, an operator
+     * chosen name — either can contain a character that would otherwise end the
+     * path segment, so the id is percent-encoded.
+     *
+     * `Uri.encode` rather than `URLEncoder`: Navigation decodes path arguments
+     * with `Uri.decode`, which does not treat `+` as a space. Pairing it with
+     * form encoding would turn a literal `+` in a channel name into a space and
+     * open the wrong thread.
+     */
     fun conversation(conversationId: String): String =
-        "conversation/${java.net.URLEncoder.encode(conversationId, "UTF-8")}"
+        "conversation/${android.net.Uri.encode(conversationId)}"
 
     fun scan(protocol: com.unifiedmesh.core.model.MeshProtocol): String = "scan/${protocol.name}"
 

@@ -51,9 +51,13 @@ problems — a missing Gradle wrapper, a duplicate protobuf builtin, a misplaced
 `kotlin{}` block, and three smart casts that do not hold across modules.
 
 **Nothing has been run against real hardware, or on a device at all.** A green
-APK proves the code compiles and links; it does not prove the Compose screens
-render, that Hilt's graph constructs at runtime, or that Room's schema is
-valid. Those need a phone.
+APK proves more than it might look like: Hilt's dependency graph and Room's
+schema are both checked by KSP at compile time, so a build that succeeds has
+already ruled those out. What it does not prove is anything that only exists at
+runtime — that the Compose screens render, that navigation timing holds, that
+the platform grants the permissions and the foreground service the app asks
+for, and of course that either radio protocol works against a real radio. Those
+need a phone.
 
 Before trusting this in the field, bench it in this order — it matches the way
 the code is layered, so a failure at any step is localised:

@@ -16,6 +16,7 @@ import com.unifiedmesh.core.model.SendTarget
 import com.unifiedmesh.core.model.UnifiedMessage
 import com.unifiedmesh.core.radio.RadioCoordinator
 import com.unifiedmesh.core.radio.SendDestination
+import com.unifiedmesh.feature.common.Routes
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,7 +25,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.net.URLDecoder
 import javax.inject.Inject
 
 data class ConversationUiState(
@@ -57,9 +57,12 @@ class ConversationViewModel @Inject constructor(
     private val coordinator: RadioCoordinator,
 ) : ViewModel() {
 
-    private val conversationId: String = savedStateHandle.get<String>("conversationId")
-        ?.let { runCatching { URLDecoder.decode(it, "UTF-8") }.getOrDefault(it) }
-        .orEmpty()
+    /**
+     * Navigation has already percent-decoded the path argument, so decoding again
+     * here would corrupt any id containing a literal `%` or `+`.
+     */
+    private val conversationId: String =
+        savedStateHandle.get<String>(Routes.ARG_CONVERSATION_ID).orEmpty()
 
     private val key = ConversationKey.parse(conversationId)
 

@@ -1,5 +1,3 @@
-import com.google.protobuf.gradle.id
-
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.protobuf)
@@ -32,9 +30,11 @@ protobuf {
     generateProtoTasks {
         all().forEach { task ->
             task.builtins {
-                // "lite" keeps the generated code small enough for a mobile app;
-                // it is what the Meshtastic firmware and clients target.
-                id("java") {
+                // The protobuf plugin already registers a "java" builtin for a
+                // JVM project, so this configures the existing one rather than
+                // adding a second. "lite" keeps the generated code small enough
+                // for a mobile app, and is what Meshtastic clients target.
+                named("java") {
                     option("lite")
                 }
             }

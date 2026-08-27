@@ -12,7 +12,6 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.unifiedmesh.app.notification.MeshNotifier
 import com.unifiedmesh.core.database.DiagnosticsRepository
-import com.unifiedmesh.core.database.MessageRepository
 import com.unifiedmesh.core.database.SettingsRepository
 import com.unifiedmesh.core.model.DiagnosticCategory
 import com.unifiedmesh.core.radio.RadioCoordinator
@@ -32,10 +31,11 @@ import javax.inject.Inject
  * minutes; `connectedDevice` is the foreground service type Android provides for
  * exactly this, and the ongoing notification is the honest price of it.
  *
- * The service owns nothing itself — the coordinator and both sessions are
- * application-scoped singletons — so its own lifecycle is not what keeps the
- * radios alive. Its job is to hold the process up and keep the status
- * notification honest.
+ * The service owns nothing itself — the coordinator, both sessions and the
+ * [RadioPipeline] that consumes them are application-scoped singletons — so its
+ * own lifecycle is not what keeps the radios alive or what records their
+ * traffic. Its job is to hold the process up and keep the status notification
+ * honest, and nothing else depends on it having started.
  */
 @AndroidEntryPoint
 class RadioService : LifecycleService() {
@@ -44,8 +44,6 @@ class RadioService : LifecycleService() {
 
     @Inject lateinit var settings: SettingsRepository
 
-    @Inject lateinit var messages: MessageRepository
-
     @Inject lateinit var notifier: MeshNotifier
 
     @Inject lateinit var diagnostics: DiagnosticsRepository
@@ -53,7 +51,6 @@ class RadioService : LifecycleService() {
     override fun onCreate() {
         super.onCreate()
         notifier.createChannels()
-        coordinator.start()
 
         // Start in the foreground immediately: Android gives a service a few
         // seconds to call startForeground before it kills the process.
@@ -85,8 +82,6 @@ class RadioService : LifecycleService() {
         }
 
         observeConnectionStates()
-        observeNodeUpdates()
-        observeChannelNames()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -136,26 +131,6 @@ class RadioService : LifecycleService() {
         lifecycleScope.launch {
             coordinator.connectionStates.collectLatest { states ->
                 notifier.updateStatus(states)
-            }
-        }
-    }
-
-    /** Mirrors each radio's node list into the database for the Nodes and Map screens. */
-    private fun observeNodeUpdates() {
-        listOf(coordinator.meshtastic, coordinator.meshCore).forEach { session ->
-            lifecycleScope.launch {
-                session.nodes.collectLatest { nodes -> messages.saveNodes(nodes) }
-            }
-        }
-    }
-
-    /** Keeps channel conversations named the way the radio names them. */
-    private fun observeChannelNames() {
-        listOf(coordinator.meshtastic, coordinator.meshCore).forEach { session ->
-            lifecycleScope.launch {
-                session.channels.collectLatest { channels ->
-                    messages.applyChannelNames(session.protocol, channels)
-                }
             }
         }
     }

@@ -331,10 +331,12 @@ private fun ScanRow(
             )
             // Say so plainly when the advertisement suggests the other stack: the
             // operator may still be right, but they should know they are
-            // overriding the hint.
-            if (scanned.likelyProtocol != null && scanned.likelyProtocol != target) {
+            // overriding the hint. Bound to a local because ScannedDevice comes
+            // from another module and will not smart-cast across the null check.
+            val likely = scanned.likelyProtocol
+            if (likely != null && likely != target) {
                 Text(
-                    text = "Looks like a ${scanned.likelyProtocol.displayName} device",
+                    text = "Looks like a ${likely.displayName} device",
                     style = MaterialTheme.typography.bodySmall,
                     color = ConnectionColors.Reconnecting,
                 )

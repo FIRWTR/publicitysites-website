@@ -417,11 +417,14 @@ class MeshCoreAdapter(
         }
 
         val timestampSeconds = message.timestamp / 1000
+        // Bound to a local: OutgoingMessage lives in another module, so Kotlin
+        // will not smart-cast its properties across a null check.
+        val channelId = message.channelId
         return try {
             when {
-                message.channelId != null -> {
-                    val index = message.channelId.toIntOrNull()
-                        ?: return SendResult.Failed("Not a MeshCore channel index: ${message.channelId}", false)
+                channelId != null -> {
+                    val index = channelId.toIntOrNull()
+                        ?: return SendResult.Failed("Not a MeshCore channel index: $channelId", false)
                     // The firmware answers a channel send with a plain OK; there is
                     // no per-message ack code for group traffic.
                     session.request(

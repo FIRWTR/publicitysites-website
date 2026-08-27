@@ -377,9 +377,14 @@ class BridgeEngineTest {
         val b = engine.evaluate(inbound(text = "second"), cfg) as BridgeDecision.Relay
 
         assertThat(a.bridgeId).isNotEqualTo(b.bridgeId)
-        assertThat(a.outgoing.bridgeMetadata!!.bridgeId).isEqualTo(a.bridgeId)
-        assertThat(a.outgoing.bridgeMetadata.originProtocol).isEqualTo(MeshProtocol.MESHTASTIC)
-        assertThat(a.outgoing.bridgeMetadata.originNodeId).isEqualTo("!a1b2c3d4")
+
+        // Bound to a local: the property comes from another module, so Kotlin
+        // will not smart-cast it across the null check.
+        val metadata = a.outgoing.bridgeMetadata
+        assertThat(metadata).isNotNull()
+        assertThat(metadata!!.bridgeId).isEqualTo(a.bridgeId)
+        assertThat(metadata.originProtocol).isEqualTo(MeshProtocol.MESHTASTIC)
+        assertThat(metadata.originNodeId).isEqualTo("!a1b2c3d4")
     }
 
     @Test

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app name lives here alone; rebranding is a one-line change. -->
+    <string name="app_name">Unified Mesh</string>
+
+    <string name="notification_channel_status">Radio status</string>
+    <string name="notification_channel_status_description">
+        The ongoing notification that keeps your radios connected while the screen is off.
+    </string>
+    <string name="notification_channel_messages">Messages</string>
+    <string name="notification_channel_messages_description">
+        Alerts for messages arriving on either network.
+    </string>
+
+    <string name="state_disconnected">Disconnected</string>
+    <string name="state_connecting">Connecting…</string>
+    <string name="state_handshaking">Starting up…</string>
+    <string name="state_connected">Connected</string>
+    <string name="state_reconnecting">Reconnecting…</string>
+    <string name="state_error">Error</string>
+</resources>

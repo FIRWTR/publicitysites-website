@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      A bare splash-time theme. Everything the user actually sees is Material 3
+      built in Compose, including dark mode, which follows the system setting.
+    -->
+    <style name="Theme.UnifiedMesh" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+</resources>

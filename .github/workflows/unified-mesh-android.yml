@@ -1,0 +1,92 @@
+name: Unified Mesh Android
+
+# Builds the Unified Mesh app on GitHub's runners, which already have the
+# Android SDK installed. This is what makes the project buildable without a
+# development machine: the APK comes out as a downloadable artifact.
+on:
+  push:
+    branches:
+      - "claude/unified-mesh-**"
+    paths:
+      - "unified-mesh/**"
+      - ".github/workflows/unified-mesh-android.yml"
+  pull_request:
+    paths:
+      - "unified-mesh/**"
+  # Lets the build be started by hand from the Actions tab.
+  workflow_dispatch:
+
+concurrency:
+  # A newer push supersedes an in-flight build of the same branch.
+  group: unified-mesh-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # The protocol, bridge and orchestration modules are plain Kotlin/JVM, so
+      # they are tested first and fail fast without touching the Android SDK.
+      - name: Run JVM unit tests
+        working-directory: unified-mesh
+        run: >
+          ./gradlew --no-daemon --stacktrace
+          :core:bridge:test
+          :core:radio:test
+          :protocol:api:test
+          :protocol:meshcore:test
+          :protocol:meshtastic:test
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: unified-mesh/**/build/reports/tests/**
+          retention-days: 14
+
+  apk:
+    name: Debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        working-directory: unified-mesh
+        run: ./gradlew --no-daemon --stacktrace :app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: unified-mesh-debug-apk
+          path: unified-mesh/app/build/outputs/apk/debug/*.apk
+          retention-days: 30
+
+      # A build that fails is the useful case here, so keep whatever the
+      # Android Gradle Plugin wrote about why.
+      - name: Upload build reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: |
+            unified-mesh/**/build/reports/**
+            unified-mesh/build/reports/**
+          retention-days: 14

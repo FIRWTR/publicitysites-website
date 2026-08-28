@@ -25,7 +25,7 @@ Android app
 | Composer with SEND VIA Meshtastic / MeshCore / Both, per-radio results | Built |
 | Radios screen: assign, connect, disconnect, reconnect, scan | Built |
 | Nodes and contacts, grouped per network, never merged | Built |
-| Map of positioned nodes with per-network markers | Built, tile-less by design — see below |
+| Map of positioned nodes with per-network markers | Built on an OpenStreetMap basemap — see below |
 | Bridge with six-layer loop prevention | Built |
 | Foreground service, reconnection with backoff, notifications | Built |
 | Diagnostics log with sanitised export | Built |
@@ -140,12 +140,21 @@ code that needs it in `BluetoothPermissions`.
 
 ## The map
 
-The map plots positions from both networks with `MT`/`MC` markers on a
-pan-and-zoom canvas, and **draws no background tiles**. That is deliberate: a
-tile source means either a Google Maps API key or a network dependency, and a
-mesh app is most useful exactly where there is no network. `MapTileSource` in
-`feature/map` is the seam for adding one — an osmdroid implementation with
-pre-cached offline tiles slots in underneath without changing anything above it.
+The map plots positions from both networks as `MT`/`MC` pins over an
+**OpenStreetMap** basemap, rendered by osmdroid. Tiles are cached to app-private
+storage as you pan, and served from that cache when there is no network — which
+matters, because a mesh app is most useful exactly where there is none. Anything
+not already cached renders blank, and the pins are drawn either way, so an
+off-grid map degrades to the plain node plot rather than failing. There is no
+pre-fetch: panning an area while connected is what caches it.
+
+The OSM Foundation's tile policy requires an identifying User-Agent, so osmdroid
+is configured with the app's package name — its default value is blocked
+outright. No location permission is involved: osmdroid is used purely as a tile
+renderer, with no location overlay and no follow-me mode.
+
+`MapTileSource` in `feature/map` remains the seam for a guaranteed-offline
+basemap — tiles pre-loaded from an MBTiles archive before leaving signal.
 
 It degrades gracefully throughout: many MeshCore contacts and plenty of
 Meshtastic nodes never report a position, and the screen says so rather than

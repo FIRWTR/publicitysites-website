@@ -1,2 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      The Map screen fetches OpenStreetMap tiles. Declared here, next to the
+      screen that needs them, rather than in the app manifest.
+
+      Neither permission is a runtime permission, so nothing is prompted for.
+      The app still asks for no location permission on API 31+: osmdroid is used
+      purely as a tile renderer, with no location overlay and no follow-me mode.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+</manifest>

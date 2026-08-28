@@ -1,8 +1,12 @@
 package com.unifiedmesh.feature.map
 
-import androidx.compose.foundation.Canvas
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,20 +20,22 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,9 +48,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import javax.inject.Inject
-import kotlin.math.max
-import kotlin.math.min
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
@@ -65,20 +75,23 @@ class MapViewModel @Inject constructor(
 /**
  * The unified map.
  *
- * ### What this is, and what it is not
+ * Draws node positions from both networks as `MT`/`MC` pins over an
+ * OpenStreetMap basemap, rendered by osmdroid.
  *
- * This renders node positions from both networks on a pan-and-zoom plot with
- * `MT`/`MC` badges, scaled to the bounding box of whatever positions exist. It
- * deliberately draws **no background tiles**: a tile source means either a Google
- * Maps API key or a network dependency, and a mesh app is most useful exactly
- * where there is no network.
+ * ### Offline behaviour
  *
- * The seam for adding tiles is [MapTileSource]. An implementation backed by
- * osmdroid with pre-cached offline tiles would slot in underneath this plot
- * without changing anything above it.
+ * A mesh app is most useful exactly where there is no network, so tiles are
+ * cached to app-private storage and served from that cache when offline.
+ * osmdroid falls back to blank tiles for anything not cached, and the pins are
+ * drawn regardless — so an off-grid map degrades to the node plot it used to be
+ * rather than failing. Panning an area while connected is what puts it in the
+ * cache; there is no pre-fetch.
  *
- * The screen degrades gracefully at every step: no positions at all, one
- * position, or positions spread across a continent all render sensibly.
+ * ### Tile usage
+ *
+ * The OpenStreetMap Foundation's tile policy requires an identifying
+ * User-Agent, which [rememberConfiguredMapView] sets to the app's package name.
+ * Leaving osmdroid's default sends `osmdroid`, which the OSMF blocks outright.
  */
 @Composable
 fun MapScreen(
@@ -86,84 +99,183 @@ fun MapScreen(
     viewModel: MapViewModel = hiltViewModel(),
 ) {
     val nodes by viewModel.positionedNodes.collectAsStateWithLifecycle()
+    val mapView = rememberConfiguredMapView()
+    val framed = remember { mutableStateOf(false) }
 
-    if (nodes.isEmpty()) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(32.dp),
-            ) {
-                Text("No positions yet", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = "Nodes appear here when they report a position. " +
-                        "Many nodes never do, so this map is often partial.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        return
-    }
+    val markerColors = MeshProtocol.entries.associateWith { it.markerColor().toArgb() }
 
     Column(modifier.fillMaxSize()) {
-        NodePlot(nodes, Modifier.weight(1f).fillMaxWidth())
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            AndroidView(
+                factory = { mapView },
+                modifier = Modifier.fillMaxSize(),
+                update = { view ->
+                    view.overlays.clear()
+                    nodes.forEach { node ->
+                        val nodePosition = node.position ?: return@forEach
+                        val marker = Marker(view).apply {
+                            position = GeoPoint(nodePosition.latitude, nodePosition.longitude)
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
+                            icon = pinDrawable(
+                                view.context,
+                                markerColors.getValue(node.protocol),
+                                node.protocol.shortLabel,
+                            )
+                            title = node.displayName
+                            snippet = buildString {
+                                append(node.protocol.displayName)
+                                node.hopsAway?.let { append("  ·  $it hop${if (it == 1) "" else "s"}") }
+                                node.batteryLevel?.let { append("  ·  $it%") }
+                            }
+                        }
+                        view.overlays.add(marker)
+                    }
+                    if (!framed.value && nodes.isNotEmpty()) {
+                        framed.value = true
+                        view.zoomToNodes(nodes)
+                    }
+                    view.invalidate()
+                },
+            )
+
+            // An overlay rather than a replacement for the map: an empty node
+            // list is normal, and hiding the basemap behind a full-screen
+            // message made a working map look broken.
+            if (nodes.isEmpty()) {
+                Card(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(16.dp),
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("No positions yet", style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            text = "Nodes appear here when they report a position. " +
+                                "Many nodes never do, so this map is often partial.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
         MapLegend(nodes)
     }
 }
 
+/**
+ * Creates the [MapView] once and ties it to the composition's lifecycle.
+ *
+ * osmdroid is a View-based library with its own `onResume`/`onPause` contract —
+ * they start and stop the tile downloader threads. Missing them leaks those
+ * threads for the life of the process, which on a screen the operator opens and
+ * closes repeatedly adds up.
+ */
 @Composable
-private fun NodePlot(nodes: List<MeshNode>, modifier: Modifier) {
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
+private fun rememberConfiguredMapView(): MapView {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    val bounds = remember(nodes) { Bounds.of(nodes) }
-    val surface = MaterialTheme.colorScheme.surfaceVariant
-    val gridColor = MaterialTheme.colorScheme.outlineVariant
-    val colors = MeshProtocol.entries.associateWith { it.markerColor() }
-
-    Canvas(
-        modifier
-            .background(surface)
-            .pointerInput(Unit) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    // Clamped so a stray pinch cannot zoom to a point where every
-                    // marker is off-screen and the map looks broken.
-                    scale = (scale * zoom).coerceIn(0.5f, 12f)
-                    offset += pan
-                }
-            },
-    ) {
-        drawGrid(gridColor)
-        nodes.forEach { node ->
-            val position = node.position ?: return@forEach
-            val point = bounds.toCanvas(position.latitude, position.longitude, size) * scale + offset
-            drawCircle(
-                color = colors.getValue(node.protocol),
-                radius = 9f,
-                center = point,
-            )
-            drawCircle(
-                color = Color.White.copy(alpha = 0.85f),
-                radius = 3.5f,
-                center = point,
-            )
+    val mapView = remember {
+        Configuration.getInstance().apply {
+            // load() first: it restores osmdroid's own persisted settings, and
+            // would otherwise overwrite everything set below on first use.
+            load(context, context.getSharedPreferences("osmdroid", Context.MODE_PRIVATE))
+            // Required by the OSM Foundation tile policy: the default value is
+            // blocked outright. The package name identifies the app without
+            // identifying the operator.
+            userAgentValue = context.packageName
+            // App-private storage: needs no permission on any supported API
+            // level, and goes away with the app rather than being left behind.
+            // osmdroid does not create these itself.
+            osmdroidBasePath = context.filesDir.resolve("osmdroid").apply { mkdirs() }
+            osmdroidTileCache = context.cacheDir.resolve("osmdroid-tiles").apply { mkdirs() }
+        }
+        MapView(context).apply {
+            setTileSource(TileSourceFactory.MAPNIK)
+            setMultiTouchControls(true)
+            // The built-in +/- buttons duplicate pinch-zoom and cover the map.
+            zoomController.setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER)
+            controller.setZoom(4.0)
         }
     }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> mapView.onResume()
+                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            mapView.onPause()
+            mapView.onDetach()
+        }
+    }
+
+    return mapView
 }
 
-private fun DrawScope.drawGrid(color: Color) {
-    val step = size.minDimension / 8f
-    var x = step
-    while (x < size.width) {
-        drawLine(color, Offset(x, 0f), Offset(x, size.height), strokeWidth = 1f)
-        x += step
+/**
+ * Frames the nodes.
+ *
+ * Guarded by a flag the caller owns rather than [android.view.View.setTag],
+ * whose int overload throws unless the key is a real resource id. It runs only
+ * on the first non-empty list: re-framing on every update would yank the view
+ * back from wherever the operator had panned every time a node reported a new
+ * position.
+ */
+private fun MapView.zoomToNodes(nodes: List<MeshNode>) {
+    val points = nodes.mapNotNull { it.position }.map { GeoPoint(it.latitude, it.longitude) }
+    if (points.isEmpty()) return
+    if (points.size == 1) {
+        controller.setZoom(13.0)
+        controller.setCenter(points.first())
+        return
     }
-    var y = step
-    while (y < size.height) {
-        drawLine(color, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f)
-        y += step
+    // A small pad keeps pins off the very edge of the viewport.
+    val box = BoundingBox.fromGeoPointsSafe(points).increaseByScale(1.3f)
+    // post: zoomToBoundingBox needs a laid-out view to know its own size.
+    post { zoomToBoundingBox(box, false) }
+}
+
+/**
+ * A coloured pin carrying the protocol's two-letter label.
+ *
+ * Drawn in code rather than shipped as two drawables so the label and the colour
+ * cannot drift apart from [MeshProtocol].
+ */
+private fun pinDrawable(context: Context, color: Int, label: String): Drawable {
+    val density = context.resources.displayMetrics.density
+    val size = (26 * density).toInt()
+    val bitmap = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val radius = size / 2f
+
+    val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color }
+    canvas.drawCircle(radius, radius, radius - density, fill)
+
+    val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        this.color = android.graphics.Color.WHITE
+        style = Paint.Style.STROKE
+        strokeWidth = 2f * density
     }
+    canvas.drawCircle(radius, radius, radius - density, ring)
+
+    val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        this.color = android.graphics.Color.WHITE
+        textSize = 11f * density
+        isFakeBoldText = true
+        textAlign = Paint.Align.CENTER
+    }
+    val bounds = Rect()
+    text.getTextBounds(label, 0, label.length, bounds)
+    canvas.drawText(label, radius, radius + bounds.height() / 2f, text)
+
+    return BitmapDrawable(context.resources, bitmap)
 }
 
 @Composable
@@ -190,6 +302,11 @@ private fun MapLegend(nodes: List<MeshNode>) {
                     )
                 }
             }
+            Text(
+                text = "Map data © OpenStreetMap contributors",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -200,61 +317,12 @@ private fun MeshProtocol.markerColor(): Color = when (this) {
 }
 
 /**
- * The bounding box of the plotted nodes.
+ * Seam for an offline basemap.
  *
- * A degenerate box — one node, or several at the same point — would divide by
- * zero, so a minimum span is applied and the single node lands in the middle.
- */
-private data class Bounds(
-    val minLat: Double,
-    val maxLat: Double,
-    val minLon: Double,
-    val maxLon: Double,
-) {
-    fun toCanvas(latitude: Double, longitude: Double, size: androidx.compose.ui.geometry.Size): Offset {
-        val padding = 0.1f
-        val usableWidth = size.width * (1 - 2 * padding)
-        val usableHeight = size.height * (1 - 2 * padding)
-        val x = ((longitude - minLon) / (maxLon - minLon)) * usableWidth + size.width * padding
-        // Latitude increases northward; canvas y increases downward.
-        val y = ((maxLat - latitude) / (maxLat - minLat)) * usableHeight + size.height * padding
-        return Offset(x.toFloat(), y.toFloat())
-    }
-
-    companion object {
-        private const val MIN_SPAN_DEGREES = 0.002
-
-        fun of(nodes: List<MeshNode>): Bounds {
-            val positions = nodes.mapNotNull { it.position }
-            if (positions.isEmpty()) return Bounds(-1.0, 1.0, -1.0, 1.0)
-
-            var minLat = positions.minOf { it.latitude }
-            var maxLat = positions.maxOf { it.latitude }
-            var minLon = positions.minOf { it.longitude }
-            var maxLon = positions.maxOf { it.longitude }
-
-            if (maxLat - minLat < MIN_SPAN_DEGREES) {
-                val centre = (maxLat + minLat) / 2
-                minLat = centre - MIN_SPAN_DEGREES / 2
-                maxLat = centre + MIN_SPAN_DEGREES / 2
-            }
-            if (maxLon - minLon < MIN_SPAN_DEGREES) {
-                val centre = (maxLon + minLon) / 2
-                minLon = centre - MIN_SPAN_DEGREES / 2
-                maxLon = centre + MIN_SPAN_DEGREES / 2
-            }
-            return Bounds(min(minLat, maxLat), max(minLat, maxLat), min(minLon, maxLon), max(minLon, maxLon))
-        }
-    }
-}
-
-/**
- * Seam for a real basemap.
- *
- * Implement this with osmdroid, MapLibre, or Google Maps and draw the result
- * behind the node plot. It is declared here, unused, so that the shape of the
- * extension point is fixed before anyone needs it — and so it is obvious that
- * the tile-less plot is a deliberate v1 choice rather than an oversight.
+ * osmdroid renders online Mapnik tiles cached to disk. A deployment that needs
+ * a guaranteed-offline map — tiles pre-loaded before leaving signal — would
+ * implement this over an MBTiles or sqlite archive and hand it to
+ * `MapView.setTileSource`. Declared here so the extension point is explicit.
  */
 interface MapTileSource {
     /** Returns a tile for the standard slippy-map addressing scheme, or null if unavailable. */
